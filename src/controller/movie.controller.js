@@ -1,7 +1,4 @@
-import React from 'react'
-
-export default function movie.controller() {
-  return (
-    <div>movie.controller</div>
-  )
-}
+exports.createMovie = async (req, res) => {
+  const { title, synopsis, background, poster, duration, releaseDate, price } =
+    req.body;
+};
