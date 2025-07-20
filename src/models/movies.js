@@ -27,6 +27,10 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: "id_director",
         as: "directors",
       });
+      movies.hasMany(models.Transaction, {
+        foreignKey: "id_movies",
+        as: "transactions",
+      });
     }
   }
   movies.init(
