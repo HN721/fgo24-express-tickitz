@@ -1,4 +1,10 @@
-const { Transaction, TransactionDetail } = require("../models");
+const {
+  Transaction,
+  TransactionDetail,
+  payment,
+  Cinema,
+  Movie,
+} = require("../models");
 
 exports.createTrans = async (req, res) => {
   const t = await Transaction.sequelize.transaction();
@@ -61,5 +67,45 @@ exports.createTrans = async (req, res) => {
     await t.rollback();
     console.error("Error create transaction:", error);
     return res.status(500).json({ message: "Gagal membuat transaksi" });
+  }
+};
+exports.getTransactionByUserId = async (req, res) => {
+  try {
+    const id_user = req.user.id;
+
+    const transactions = await Transaction.findAll({
+      where: { id_user },
+      include: [
+        {
+          model: TransactionDetail,
+          as: "details",
+          attributes: ["seat", "status"],
+        },
+        {
+          model: Movie,
+          as: "movie",
+          attributes: ["title", "price", "poster"],
+        },
+        {
+          model: Cinema,
+          as: "cinema",
+          attributes: ["name", "location"],
+        },
+        {
+          model: payment,
+          as: "paymentMethod",
+          attributes: ["method_name"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json({
+      message: "Transaksi ditemukan",
+      data: transactions,
+    });
+  } catch (error) {
+    console.error("Error get transaction by user:", error);
+    return res.status(500).json({ message: "Gagal mengambil transaksi" });
   }
 };
