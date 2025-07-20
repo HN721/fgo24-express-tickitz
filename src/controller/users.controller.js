@@ -60,3 +60,47 @@ exports.login = async (req, res) => {
     console.log(err);
   }
 };
+exports.updateUser = async (req, res) => {
+  try {
+    const { username, email, password, fullname, phone_number } = req.body;
+    const id = req.user.id; // ambil dari token di middleware
+
+    const profile_image = req?.file?.filename || null;
+
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ message: "User tidak ditemukan" });
+    }
+
+    let newPassword = user.password;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      newPassword = await bcrypt.hash(password, salt);
+    }
+
+    await User.update(
+      {
+        username: username || user.username,
+        email: email || user.email,
+        password: newPassword,
+      },
+      { where: { id } }
+    );
+
+    await Profile.update(
+      {
+        fullname: fullname || username,
+        phone_number,
+        profile_image: profile_image || undefined,
+      },
+      { where: { id_user: id } }
+    );
+
+    return res
+      .status(200)
+      .json({ message: "User & profile berhasil diupdate" });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return res.status(500).json({ message: "Update gagal" });
+  }
+};
