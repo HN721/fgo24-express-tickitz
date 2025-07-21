@@ -1,5 +1,6 @@
 const movieRoute = require("express").Router();
 const authMiddleware = require("../middleware/authMiddleware");
+const isAdmin = require("../middleware/adminMiddleware");
 const multer = require("multer");
 const path = require("node:path");
 const { v4: uuid } = require("uuid");
@@ -20,6 +21,7 @@ const moviePicture = multer({ storage });
 movieRoute.post(
   "/",
   authMiddleware,
+  isAdmin,
   moviePicture.single("picture"),
   movieController.createMovie
 );

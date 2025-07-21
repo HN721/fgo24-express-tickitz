@@ -230,7 +230,7 @@ exports.updateMovies = async (req, res) => {
 
     const movie = await Movie.findByPk(id);
     if (!movie) {
-      return res.status(404).json({ message: "Movie tidak ditemukan" });
+      return res.status(404).json({ message: "Movie not found" });
     }
     await movie.update({
       title: title || movie.title,
@@ -252,10 +252,10 @@ exports.updateMovies = async (req, res) => {
 
     return res
       .status(200)
-      .json({ message: "Movie berhasil diupdate", data: movie });
+      .json({ message: "Movie updated successfully", data: movie });
   } catch (error) {
     console.error("Error updating movie:", error);
-    return res.status(500).json({ error: "Gagal mengupdate movie" });
+    return res.status(500).json({ error: "Failed to update movie" });
   }
 };
 exports.deleteMovies = async (req, res) => {
