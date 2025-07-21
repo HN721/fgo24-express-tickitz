@@ -212,5 +212,72 @@ exports.getNowShowingMovies = async (req, res) => {
     return res.status(500).json({ error: "Failed to get now showing movies" });
   }
 };
-exports.updateMovies = async (req, res) => {};
-exports.deleteMovies = async (req, res) => {};
+exports.updateMovies = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      synopsis,
+      duration,
+      releaseDate,
+      price,
+      genres,
+      directors,
+      actors,
+    } = req.body;
+
+    const poster = req.files?.poster?.[0]?.filename || null;
+    const background = req.files?.background?.[0]?.filename || null;
+
+    const movie = await Movie.findByPk(id);
+    if (!movie) {
+      return res.status(404).json({ message: "Movie tidak ditemukan" });
+    }
+
+    await movie.update({
+      title: title || movie.title,
+      synopsis: synopsis || movie.synopsis,
+      duration: duration || movie.duration,
+      releaseDate: releaseDate || movie.releaseDate,
+      price: price || movie.price,
+      poster: poster || movie.poster,
+      background: background || movie.background,
+    });
+
+    if (genres) await movie.setGenres(genres);
+    if (directors) await movie.setDirectors(directors);
+    if (actors) await movie.setActors(actors);
+
+    await redis.del("all_movies");
+    await redis.del("coming_soon_movies");
+    await redis.del("now_showing_movies");
+
+    return res
+      .status(200)
+      .json({ message: "Movie berhasil diupdate", data: movie });
+  } catch (error) {
+    console.error("Error updating movie:", error);
+    return res.status(500).json({ error: "Gagal mengupdate movie" });
+  }
+};
+exports.deleteMovies = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const movie = await Movie.findByPk(id);
+    if (!movie) {
+      return res.status(404).json({ message: "Movie tidak ditemukan" });
+    }
+
+    await movie.destroy();
+
+    await redis.del("all_movies");
+    await redis.del("coming_soon_movies");
+    await redis.del("now_showing_movies");
+
+    return res.status(200).json({ message: "Movie berhasil dihapus" });
+  } catch (error) {
+    console.error("Error deleting movie:", error);
+    return res.status(500).json({ error: "Gagal menghapus movie" });
+  }
+};
