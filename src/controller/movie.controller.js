@@ -212,3 +212,5 @@ exports.getNowShowingMovies = async (req, res) => {
     return res.status(500).json({ error: "Failed to get now showing movies" });
   }
 };
+exports.updateMovies = async (req, res) => {};
+exports.deleteMovies = async (req, res) => {};
