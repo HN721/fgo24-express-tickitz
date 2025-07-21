@@ -1,4 +1,6 @@
 const { Movie, Genre, Director, Actor } = require("../models");
+const redis = require("../utils/redis");
+const { Op } = require("sequelize");
 
 exports.createMovie = async (req, res) => {
   try {
@@ -29,14 +31,15 @@ exports.createMovie = async (req, res) => {
     if (genres && genres.length > 0) {
       await newMovie.setGenres(genres);
     }
-
     if (directors && directors.length > 0) {
       await newMovie.setDirectors(directors);
     }
-
     if (actors && actors.length > 0) {
       await newMovie.setActors(actors);
     }
+
+    await redis.del("all_movies");
+    await redis.del("coming_soon_movies");
 
     return res.status(201).json({
       message: "Movie created successfully",
@@ -47,28 +50,29 @@ exports.createMovie = async (req, res) => {
     return res.status(500).json({ error: "Failed to create movie" });
   }
 };
+
 exports.getAllMovies = async (req, res) => {
   try {
+    // Check cache
+    const cached = await redis.get("all_movies");
+    if (cached) {
+      console.log("getAllMovies: from Redis");
+      return res.status(200).json({
+        message: "All movies retrieved (cached)",
+        data: JSON.parse(cached),
+      });
+    }
+
     const movies = await Movie.findAll({
       include: [
-        {
-          model: Genre,
-          as: "genres",
-          through: { attributes: [] },
-        },
-        {
-          model: Director,
-          as: "directors",
-          through: { attributes: [] },
-        },
-        {
-          model: Actor,
-          as: "actors",
-          through: { attributes: [] },
-        },
+        { model: Genre, as: "genres", through: { attributes: [] } },
+        { model: Director, as: "directors", through: { attributes: [] } },
+        { model: Actor, as: "actors", through: { attributes: [] } },
       ],
       order: [["releaseDate", "DESC"]],
     });
+
+    await redis.set("all_movies", JSON.stringify(movies), "EX", 300); // 5 menit cache
 
     return res.status(200).json({
       message: "All movies retrieved",
@@ -79,35 +83,38 @@ exports.getAllMovies = async (req, res) => {
     return res.status(500).json({ error: "Failed to get movies" });
   }
 };
+
 exports.getComingSoonMovies = async (req, res) => {
   try {
+    const cached = await redis.get("coming_soon_movies");
+    if (cached) {
+      console.log("getComingSoonMovies: from Redis");
+      return res.status(200).json({
+        message: "Coming soon movies retrieved (cached)",
+        data: JSON.parse(cached),
+      });
+    }
+
     const today = new Date();
 
     const comingSoon = await Movie.findAll({
       where: {
-        releaseDate: {
-          [require("sequelize").Op.gt]: today,
-        },
+        releaseDate: { [Op.gt]: today },
       },
       include: [
-        {
-          model: Genre,
-          as: "genres",
-          through: { attributes: [] },
-        },
-        {
-          model: Director,
-          as: "directors",
-          through: { attributes: [] },
-        },
-        {
-          model: Actor,
-          as: "actors",
-          through: { attributes: [] },
-        },
+        { model: Genre, as: "genres", through: { attributes: [] } },
+        { model: Director, as: "directors", through: { attributes: [] } },
+        { model: Actor, as: "actors", through: { attributes: [] } },
       ],
       order: [["releaseDate", "ASC"]],
     });
+
+    await redis.set(
+      "coming_soon_movies",
+      JSON.stringify(comingSoon),
+      "EX",
+      300
+    );
 
     return res.status(200).json({
       message: "Coming soon movies retrieved",
