@@ -19,6 +19,8 @@ const profilePicture = multer({ storage });
 
 userRoute.post("/register", userController.regsiter);
 userRoute.post("/login", userController.login);
+userRoute.post("/forgot", userController.forgotPassword);
+
 userRoute.put(
   "/user/update",
   authMiddleware,

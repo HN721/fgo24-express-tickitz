@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
 const { User, Profile } = require("../models");
 const bcrypt = require("bcrypt");
-const { sendEmailRegister } = require("../utils/sendEmail");
+const redis = require("../utils/redis");
+const { sendEmailRegister, sendOtp } = require("../utils/sendEmail");
 exports.regsiter = async (req, res) => {
   try {
     const { email, password, username } = req.body;
@@ -27,7 +28,7 @@ exports.regsiter = async (req, res) => {
       phone_number: "",
       profile_image: "",
     });
-    await sendEmailRegister();
+    await sendEmailRegister(email);
     return res
       .status(201)
       .json({ success: true, message: "Success Register Data", result: user });
@@ -114,8 +115,44 @@ exports.forgotPassword = async (req, res) => {
   if (!user) {
     return res.status(404).json({ message: "Email Tidak Ada" });
   }
+  await sendOtp(email);
   return res.status(200).json({
     success: true,
     message: `Kode OTP telah dikirimkan ke ${email}`,
   });
+};
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword, otp } = req.body;
+
+    if (!email || !newPassword || !otp) {
+      return res
+        .status(400)
+        .json({ message: "Email, OTP, dan password baru wajib diisi" });
+    }
+
+    const savedOtp = await redis.get(`otp:${email}`);
+    if (!savedOtp || savedOtp !== otp) {
+      return res
+        .status(400)
+        .json({ message: "OTP tidak valid atau sudah kadaluarsa" });
+    }
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ message: "Pengguna tidak ditemukan" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await user.update({ password: hashedPassword });
+
+    await redis.del(`otp:${email}`);
+
+    return res.status(200).json({ message: "Password berhasil direset" });
+  } catch (error) {
+    console.error("Error resetPassword:", error);
+    return res.status(500).json({ message: "Gagal reset password" });
+  }
 };

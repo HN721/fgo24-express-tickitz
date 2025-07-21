@@ -225,7 +225,6 @@ exports.updateMovies = async (req, res) => {
       directors,
       actors,
     } = req.body;
-
     const poster = req.files?.poster?.[0]?.filename || null;
     const background = req.files?.background?.[0]?.filename || null;
 
@@ -233,7 +232,6 @@ exports.updateMovies = async (req, res) => {
     if (!movie) {
       return res.status(404).json({ message: "Movie tidak ditemukan" });
     }
-
     await movie.update({
       title: title || movie.title,
       synopsis: synopsis || movie.synopsis,
