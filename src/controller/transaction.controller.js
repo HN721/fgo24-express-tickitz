@@ -36,6 +36,34 @@ exports.createTrans = async (req, res) => {
         .status(400)
         .json({ message: "Semua field dan seat wajib diisi" });
     }
+    const existing = await Transaction.findAll({
+      where: {
+        id_movie,
+        id_cinema,
+        date_booking,
+        time,
+      },
+      include: [
+        {
+          model: TransactionDetail,
+          as: "details",
+          where: {
+            seat: seats,
+          },
+        },
+      ],
+    });
+
+    if (existing.length > 0) {
+      const bookedSeats = existing.flatMap((trx) =>
+        trx.details.map((d) => d.seat)
+      );
+      return res.status(400).json({
+        message: `Kursi ${bookedSeats.join(
+          ", "
+        )} sudah dibooking untuk film, tanggal, dan jam tersebut`,
+      });
+    }
 
     const newTransaction = await Transaction.create(
       {
