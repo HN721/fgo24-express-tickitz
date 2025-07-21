@@ -104,3 +104,14 @@ exports.updateUser = async (req, res) => {
     return res.status(500).json({ message: "Update gagal" });
   }
 };
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ where: { email } });
+  if (!user) {
+    return res.status(404).json({ message: "Email Tidak Ada" });
+  }
+  return res.status(200).json({
+    success: true,
+    message: `Kode OTP telah dikirimkan ke ${email}`,
+  });
+};
