@@ -1,37 +1,49 @@
 const { Genre } = require("../models");
+const { constants: http } = require("http2");
+
 exports.createGenre = async (req, res) => {
   try {
     const { name } = req.body;
+
     if (!name) {
-      return res.status(400).json({
+      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
         success: false,
-        message: "Name cant be Empty",
-        error: error.message,
+        message: "Name cannot be empty",
       });
     }
-    const results = await Genre.create(name);
-    if (!results) {
-      return res.status(400).json({
-        success: false,
-        message: "Error Cant Insert Data",
-        error: error.message,
-      });
-    }
-    return res.status(201).json({
+
+    const results = await Genre.create({ name });
+
+    return res.status(http.HTTP_STATUS_CREATED).json({
       success: true,
-      message: "Successfully Create Genre",
+      message: "Successfully created genre",
       result: results,
     });
   } catch (error) {
-    console.error("Error in create genre:", error.message);
-    return res.status(500).json({ message: error.message });
+    console.error("Error in createGenre:", error.message);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to create genre",
+      error: error.message,
+    });
   }
 };
+
 exports.getGenre = async (req, res) => {
-  const results = await Genre.findAll();
-  return res.status(201).json({
-    success: true,
-    message: "Success fully Get All Genres",
-    result: results,
-  });
+  try {
+    const results = await Genre.findAll();
+
+    return res.status(http.HTTP_STATUS_OK).json({
+      success: true,
+      message: "Successfully fetched all genres",
+      result: results,
+    });
+  } catch (error) {
+    console.error("Error in getGenre:", error.message);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to fetch genres",
+      error: error.message,
+    });
+  }
 };
