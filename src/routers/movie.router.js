@@ -25,5 +25,6 @@ movieRoute.post(
 );
 movieRoute.get("/", movieController.getAllMovies);
 movieRoute.get("/coming-soon", movieController.getComingSoonMovies);
+movieRoute.get("/now-showing", movieController.getNowShowingMovies);
 
 module.exports = movieRoute;
