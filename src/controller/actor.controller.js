@@ -1,37 +1,49 @@
 const { Actor } = require("../models");
+const { constants: http } = require("http2");
+
 exports.createActor = async (req, res) => {
   try {
     const { fullname } = req.body;
+
     if (!fullname) {
-      return res.status(400).json({
+      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
         success: false,
-        message: "fullname cant be Empty",
-        error: error.message,
+        message: "Fullname cannot be empty",
       });
     }
-    const results = await Actor.create(fullname);
-    if (!results) {
-      return res.status(400).json({
-        success: false,
-        message: "Error Cant Insert Data",
-        error: error.message,
-      });
-    }
-    return res.status(201).json({
+
+    const results = await Actor.create({ fullname });
+
+    return res.status(http.HTTP_STATUS_CREATED).json({
       success: true,
-      message: "Successfully Create Actor",
+      message: "Successfully created actor",
       result: results,
     });
   } catch (error) {
-    console.error("Error in create genre:", error.message);
-    return res.status(500).json({ message: error.message });
+    console.error("Error in createActor:", error.message);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to create actor",
+      error: error.message,
+    });
   }
 };
+
 exports.getActor = async (req, res) => {
-  const results = await Actor.findAll();
-  return res.status(201).json({
-    success: true,
-    message: "Success fully Get All Actor",
-    result: results,
-  });
+  try {
+    const results = await Actor.findAll();
+
+    return res.status(http.HTTP_STATUS_OK).json({
+      success: true,
+      message: "Successfully fetched all actors",
+      result: results,
+    });
+  } catch (error) {
+    console.error("Error in getActor:", error.message);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to fetch actors",
+      error: error.message,
+    });
+  }
 };
