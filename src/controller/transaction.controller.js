@@ -5,6 +5,7 @@ const {
   Cinema,
   Movie,
 } = require("../models");
+const { constants: http } = require("http2");
 
 exports.createTrans = async (req, res) => {
   const t = await Transaction.sequelize.transaction();
@@ -32,10 +33,11 @@ exports.createTrans = async (req, res) => {
       !seats ||
       seats.length === 0
     ) {
-      return res
-        .status(400)
-        .json({ message: "Semua field dan seat wajib diisi" });
+      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
+        message: "Semua field dan seat wajib diisi",
+      });
     }
+
     const existing = await Transaction.findAll({
       where: {
         id_movie,
@@ -58,7 +60,7 @@ exports.createTrans = async (req, res) => {
       const bookedSeats = existing.flatMap((trx) =>
         trx.details.map((d) => d.seat)
       );
-      return res.status(400).json({
+      return res.status(http.HTTP_STATUS_BAD_REQUEST).json({
         message: `Kursi ${bookedSeats.join(
           ", "
         )} sudah dibooking untuk film, tanggal, dan jam tersebut`,
@@ -87,16 +89,20 @@ exports.createTrans = async (req, res) => {
     await TransactionDetail.bulkCreate(detailData, { transaction: t });
 
     await t.commit();
-    return res.status(201).json({
+    return res.status(http.HTTP_STATUS_CREATED).json({
       message: "Transaksi dan detail berhasil dibuat",
       data: newTransaction,
     });
   } catch (error) {
     await t.rollback();
     console.error("Error create transaction:", error);
-    return res.status(500).json({ message: "Gagal membuat transaksi" });
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      message: "Gagal membuat transaksi",
+      error: error.message,
+    });
   }
 };
+
 exports.getTransactionByUserId = async (req, res) => {
   try {
     const id_user = req.user.id;
@@ -128,12 +134,15 @@ exports.getTransactionByUserId = async (req, res) => {
       order: [["createdAt", "DESC"]],
     });
 
-    return res.status(200).json({
+    return res.status(http.HTTP_STATUS_OK).json({
       message: "Transaksi ditemukan",
       data: transactions,
     });
   } catch (error) {
     console.error("Error get transaction by user:", error);
-    return res.status(500).json({ message: "Gagal mengambil transaksi" });
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      message: "Gagal mengambil transaksi",
+      error: error.message,
+    });
   }
 };
