@@ -1,6 +1,7 @@
 const { Movie, Genre, Director, Actor } = require("../models");
 const redis = require("../utils/redis");
 const { Op } = require("sequelize");
+const { constants: http } = require("http2");
 
 exports.createMovie = async (req, res) => {
   try {
@@ -47,7 +48,9 @@ exports.createMovie = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating movie:", error);
-    return res.status(500).json({ error: "Failed to create movie" });
+    return res
+      .status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      .json({ error: "Failed to create movie" });
   }
 };
 
@@ -63,7 +66,7 @@ exports.getAllMovies = async (req, res) => {
     const cached = await redis.get(cacheKey);
     if (cached) {
       console.log("📦 getAllMovies from Redis:", cacheKey);
-      return res.status(200).json({
+      return res.status(http.HTTP_STATUS_OK).json({
         message: "Movies retrieved (cached)",
         ...JSON.parse(cached),
       });
@@ -121,10 +124,12 @@ exports.getAllMovies = async (req, res) => {
     //  Simpan ke Redis cache (5 menit)
     await redis.set(cacheKey, JSON.stringify(response), "EX", 300);
 
-    return res.status(200).json(response);
+    return res.status(http.HTTP_STATUS_OK).json(response);
   } catch (error) {
     console.error("Error getting all movies:", error);
-    return res.status(500).json({ error: "Failed to get movies" });
+    return res
+      .status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      .json({ error: "Failed to get movies" });
   }
 };
 
@@ -133,7 +138,7 @@ exports.getComingSoonMovies = async (req, res) => {
     const cached = await redis.get("coming_soon_movies");
     if (cached) {
       console.log("getComingSoonMovies: from Redis");
-      return res.status(200).json({
+      return res.status(http.HTTP_STATUS_OK).json({
         message: "Coming soon movies retrieved (cached)",
         data: JSON.parse(cached),
       });
@@ -160,13 +165,15 @@ exports.getComingSoonMovies = async (req, res) => {
       300
     );
 
-    return res.status(200).json({
+    return res.status(http.HTTP_STATUS_OK).json({
       message: "Coming soon movies retrieved",
       data: comingSoon,
     });
   } catch (error) {
     console.error("Error getting coming soon movies:", error);
-    return res.status(500).json({ error: "Failed to get coming soon movies" });
+    return res
+      .status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      .json({ error: "Failed to get coming soon movies" });
   }
 };
 exports.getNowShowingMovies = async (req, res) => {
@@ -174,7 +181,7 @@ exports.getNowShowingMovies = async (req, res) => {
     const cached = await redis.get("now_showing_movies");
     if (cached) {
       console.log("getNowShowingMovies: from Redis");
-      return res.status(200).json({
+      return res.status(http.HTTP_STATUS_OK).json({
         message: "Now showing movies retrieved (cached)",
         data: JSON.parse(cached),
       });
@@ -203,13 +210,15 @@ exports.getNowShowingMovies = async (req, res) => {
       300
     );
 
-    return res.status(200).json({
+    return res.status(http.HTTP_STATUS_OK).json({
       message: "Now showing movies retrieved",
       data: nowShowing,
     });
   } catch (error) {
     console.error("Error getting now showing movies:", error);
-    return res.status(500).json({ error: "Failed to get now showing movies" });
+    return res
+      .status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      .json({ error: "Failed to get now showing movies" });
   }
 };
 exports.updateMovies = async (req, res) => {
@@ -251,11 +260,13 @@ exports.updateMovies = async (req, res) => {
     await redis.del("now_showing_movies");
 
     return res
-      .status(200)
+      .status(http.HTTP_STATUS_OK)
       .json({ message: "Movie updated successfully", data: movie });
   } catch (error) {
     console.error("Error updating movie:", error);
-    return res.status(500).json({ error: "Failed to update movie" });
+    return res
+      .status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      .json({ error: "Failed to update movie" });
   }
 };
 exports.deleteMovies = async (req, res) => {
@@ -273,9 +284,13 @@ exports.deleteMovies = async (req, res) => {
     await redis.del("coming_soon_movies");
     await redis.del("now_showing_movies");
 
-    return res.status(200).json({ message: "Movie berhasil dihapus" });
+    return res
+      .status(http.HTTP_STATUS_OK)
+      .json({ message: "Movie berhasil dihapus" });
   } catch (error) {
     console.error("Error deleting movie:", error);
-    return res.status(500).json({ error: "Gagal menghapus movie" });
+    return res
+      .status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      .json({ error: "Gagal menghapus movie" });
   }
 };
