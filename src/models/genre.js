@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      genre.belongsToMany(models.Movie, {
+      genre.belongsToMany(models.movies, {
         through: models.movies_genre,
         foreignKey: "id_genre",
         otherKey: "id_movie",

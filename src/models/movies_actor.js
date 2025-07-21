@@ -9,13 +9,13 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      movies_actor.belongsTo(models.Movie, {
+      movies_actor.belongsTo(models.movies, {
         foreignKey: "id_movie",
         as: "movie",
       });
 
       // Relasi ke Genre
-      movies_actor.belongsTo(models.Actor, {
+      movies_actor.belongsTo(models.actors, {
         foreignKey: "id_actor",
         as: "actor",
       });

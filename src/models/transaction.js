@@ -14,17 +14,17 @@ module.exports = (sequelize, DataTypes) => {
         as: "user",
       });
 
-      transaction.belongsTo(models.Movie, {
+      transaction.belongsTo(models.movies, {
         foreignKey: "id_movie",
         as: "movie",
       });
 
-      transaction.belongsTo(models.Cinema, {
+      transaction.belongsTo(models.cinema, {
         foreignKey: "id_cinema",
         as: "cinema",
       });
 
-      transaction.belongsTo(models.Payment, {
+      transaction.belongsTo(models.payment, {
         foreignKey: "id_payment",
         as: "payment",
       });

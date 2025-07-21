@@ -8,12 +8,12 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      movies_genre.belongsTo(models.Movie, {
+      movies_genre.belongsTo(models.movies, {
         foreignKey: "id_movie",
         as: "movie",
       });
 
-      movies_genre.belongsTo(models.Genre, {
+      movies_genre.belongsTo(models.genre, {
         foreignKey: "id_genre",
         as: "genre",
       });

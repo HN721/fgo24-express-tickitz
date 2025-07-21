@@ -7,7 +7,7 @@ exports.regsiter = async (req, res) => {
     if (!email || !password || !username) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ where: { email: email } });
     if (userExists) {
       return res.status(400).json({ message: "Email Sudah Ada" });
     }
@@ -38,7 +38,7 @@ exports.login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(404).json({ message: "Email Tidak Ada" });
     }
@@ -46,7 +46,7 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: "Password Salah" });
     }
-    const token = jwt.sign({ id: user._id }, "hosea123", { expiresIn: "1h" });
+    const token = jwt.sign({ id: user.id }, "hosea123", { expiresIn: "1h" });
     return res.status(200).json({
       success: true,
       message: "Login successful",

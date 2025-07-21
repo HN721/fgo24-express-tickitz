@@ -9,25 +9,25 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      movies.belongsToMany(models.Genre, {
+      movies.belongsToMany(models.genre, {
         through: models.movies_genre,
         foreignKey: "id_movie",
         otherKey: "id_genre",
         as: "genres",
       });
-      movies.belongsToMany(models.Actor, {
+      movies.belongsToMany(models.actors, {
         through: models.movies_actor,
         foreignKey: "id_movie",
         otherKey: "id_actor",
         as: "actors",
       });
-      movies.belongsToMany(models.Director, {
+      movies.belongsToMany(models.director, {
         through: models.movies_director,
         foreignKey: "id_movie",
         otherKey: "id_director",
         as: "directors",
       });
-      movies.hasMany(models.Transaction, {
+      movies.hasMany(models.transaction, {
         foreignKey: "id_movies",
         as: "transactions",
       });
