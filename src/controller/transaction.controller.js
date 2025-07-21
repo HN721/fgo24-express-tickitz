@@ -146,3 +146,48 @@ exports.getTransactionByUserId = async (req, res) => {
     });
   }
 };
+exports.getAllTransaction = async (req, res) => {
+  try {
+    const transactions = await Transaction.findAll({
+      include: [
+        {
+          model: TransactionDetail,
+          as: "details",
+          attributes: ["seat", "status"],
+        },
+        {
+          model: Movie,
+          as: "movie",
+          attributes: ["title", "price", "poster"],
+        },
+        {
+          model: Cinema,
+          as: "cinema",
+          attributes: ["name", "location"],
+        },
+        {
+          model: payment,
+          as: "paymentMethod",
+          attributes: ["method_name"],
+        },
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "username", "email"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(http.HTTP_STATUS_OK).json({
+      message: "Berhasil mengambil semua transaksi",
+      data: transactions,
+    });
+  } catch (error) {
+    console.error("Error getAllTransaction (admin):", error);
+    return res.status(http.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+      message: "Gagal mengambil data transaksi",
+      error: error.message,
+    });
+  }
+};
