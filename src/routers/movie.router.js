@@ -1,11 +1,11 @@
-const userRoute = require("express").Router();
+const movieRoute = require("express").Router();
 const authMiddleware = require("../middleware/authMiddleware");
 const multer = require("multer");
 const path = require("node:path");
 const { v4: uuid } = require("uuid");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join("uploads", "profile-picture"));
+    cb(null, path.join("uploads", "movie-picture"));
   },
   filename: function (req, file, cb) {
     const filename = file.originalname;
@@ -14,15 +14,16 @@ const storage = multer.diskStorage({
     cb(null, savedFile);
   },
 });
-const userController = require("../controller/users.controller");
-const profilePicture = multer({ storage });
+const movieController = require("../controller/movie.controller");
+const moviePicture = multer({ storage });
 
-userRoute.post("/register", userController.regsiter);
-userRoute.post("/login", userController.login);
-userRoute.put(
-  "/user/update",
+movieRoute.post(
+  "/",
   authMiddleware,
-  profilePicture.single("picture"),
-  userController.updateUser
+  moviePicture.single("picture"),
+  movieController.createMovie
 );
-module.exports = userRoute;
+movieRoute.get("/", movieController.getAllMovies);
+movieRoute.get("/coming-soon", movieController.getComingSoonMovies);
+
+module.exports = movieRoute;
