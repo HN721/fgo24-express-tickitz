@@ -49,23 +49,23 @@ module.exports = {
       },
     ];
 
-    await queryInterface.bulkInsert("Movies", movies, { returning: true });
+    await queryInterface.bulkInsert("movies", movies, { returning: true });
 
     const movieRecords = await queryInterface.sequelize.query(
-      `SELECT id FROM "Movies"`,
+      `SELECT id FROM "movies"`,
       { type: Sequelize.QueryTypes.SELECT }
     );
 
     const movieGenres = [
       {
-        movieId: movieRecords[0].id,
-        genreId: genres[0].id,
+        id_movie: movieRecords[0].id,
+        id_genre: genres[0].id,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        movieId: movieRecords[1].id,
-        genreId: genres[1].id,
+        id_movie: movieRecords[1].id,
+        id_genre: genres[1].id,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -73,14 +73,14 @@ module.exports = {
 
     const movieDirectors = [
       {
-        movieId: movieRecords[0].id,
-        directorId: directors[0].id,
+        id_movie: movieRecords[0].id,
+        id_director: directors[0].id,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        movieId: movieRecords[1].id,
-        directorId: directors[1].id,
+        id_movie: movieRecords[1].id,
+        id_director: directors[1].id,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -88,22 +88,22 @@ module.exports = {
 
     const movieActors = [
       {
-        movieId: movieRecords[0].id,
-        actorId: actors[0].id,
+        id_movie: movieRecords[0].id,
+        id_actor: actors[0].id,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        movieId: movieRecords[1].id,
-        actorId: actors[1].id,
+        id_movie: movieRecords[1].id,
+        id_actor: actors[1].id,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
     ];
 
-    await queryInterface.bulkInsert("movie_genre", movieGenres);
-    await queryInterface.bulkInsert("movie_director", movieDirectors);
-    await queryInterface.bulkInsert("movie_actors", movieActors);
+    await queryInterface.bulkInsert("movies_genres", movieGenres);
+    await queryInterface.bulkInsert("movies_directors", movieDirectors);
+    await queryInterface.bulkInsert("movies_actors", movieActors);
   },
 
   async down(queryInterface, Sequelize) {
@@ -113,9 +113,9 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    await queryInterface.bulkDelete("movie_genre", null, {});
-    await queryInterface.bulkDelete("movie_director", null, {});
-    await queryInterface.bulkDelete("movie_actors", null, {});
-    await queryInterface.bulkDelete("Movies", null, {});
+    await queryInterface.bulkDelete("movies_genres", null, {});
+    await queryInterface.bulkDelete("movies_directors", null, {});
+    await queryInterface.bulkDelete("movies_actors", null, {});
+    await queryInterface.bulkDelete("movies", null, {});
   },
 };

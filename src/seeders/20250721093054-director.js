@@ -13,7 +13,7 @@ module.exports = {
      * }], {});
      *
      */
-    await queryInterface.bulkInsert("Directors", [
+    await queryInterface.bulkInsert("directors", [
       {
         fullname: "Christopher Nolan",
         createdAt: new Date(),
@@ -25,12 +25,12 @@ module.exports = {
         updatedAt: new Date(),
       },
       {
-        name: "Quentin Tarantino",
+        fullname: "Quentin Tarantino",
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        name: "James Cameron",
+        fullname: "James Cameron",
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -49,5 +49,6 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
+    await queryInterface.bulkDelete("directors", null, {});
   },
 };
