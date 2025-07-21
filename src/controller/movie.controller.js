@@ -169,3 +169,46 @@ exports.getComingSoonMovies = async (req, res) => {
     return res.status(500).json({ error: "Failed to get coming soon movies" });
   }
 };
+exports.getNowShowingMovies = async (req, res) => {
+  try {
+    const cached = await redis.get("now_showing_movies");
+    if (cached) {
+      console.log("getNowShowingMovies: from Redis");
+      return res.status(200).json({
+        message: "Now showing movies retrieved (cached)",
+        data: JSON.parse(cached),
+      });
+    }
+
+    const today = new Date();
+
+    const nowShowing = await Movie.findAll({
+      where: {
+        releaseDate: {
+          [Op.lte]: today,
+        },
+      },
+      include: [
+        { model: Genre, as: "genres", through: { attributes: [] } },
+        { model: Director, as: "directors", through: { attributes: [] } },
+        { model: Actor, as: "actors", through: { attributes: [] } },
+      ],
+      order: [["releaseDate", "DESC"]],
+    });
+
+    await redis.set(
+      "now_showing_movies",
+      JSON.stringify(nowShowing),
+      "EX",
+      300
+    );
+
+    return res.status(200).json({
+      message: "Now showing movies retrieved",
+      data: nowShowing,
+    });
+  } catch (error) {
+    console.error("Error getting now showing movies:", error);
+    return res.status(500).json({ error: "Failed to get now showing movies" });
+  }
+};
