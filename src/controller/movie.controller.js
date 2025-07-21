@@ -53,31 +53,75 @@ exports.createMovie = async (req, res) => {
 
 exports.getAllMovies = async (req, res) => {
   try {
-    // Check cache
-    const cached = await redis.get("all_movies");
+    const search = req.query.search?.toLowerCase() || "";
+    const genreId = req.query.genre || null;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const offset = (page - 1) * limit;
+
+    const cacheKey = `movies:search=${search}&genre=${genreId}&page=${page}&limit=${limit}`;
+    const cached = await redis.get(cacheKey);
     if (cached) {
-      console.log("getAllMovies: from Redis");
+      console.log("📦 getAllMovies from Redis:", cacheKey);
       return res.status(200).json({
-        message: "All movies retrieved (cached)",
-        data: JSON.parse(cached),
+        message: "Movies retrieved (cached)",
+        ...JSON.parse(cached),
       });
     }
 
+    const whereClause = search
+      ? {
+          title: {
+            [Op.iLike]: `%${search}%`,
+          },
+        }
+      : {};
+
+    const genreInclude = {
+      model: Genre,
+      as: "genres",
+      through: { attributes: [] },
+    };
+
+    if (genreId) {
+      genreInclude.where = { id: genreId };
+    }
+
+    // Total data (untuk pagination)
+    const totalData = await Movie.count({
+      where: whereClause,
+      include: genreId ? [genreInclude] : [],
+      distinct: true,
+    });
+
+    const totalPages = Math.ceil(totalData / limit);
+
     const movies = await Movie.findAll({
+      where: whereClause,
       include: [
-        { model: Genre, as: "genres", through: { attributes: [] } },
+        genreInclude,
         { model: Director, as: "directors", through: { attributes: [] } },
         { model: Actor, as: "actors", through: { attributes: [] } },
       ],
       order: [["releaseDate", "DESC"]],
+      offset,
+      limit,
+      distinct: true,
     });
 
-    await redis.set("all_movies", JSON.stringify(movies), "EX", 300); // 5 menit cache
-
-    return res.status(200).json({
-      message: "All movies retrieved",
+    const response = {
+      message: "Movies retrieved",
+      page,
+      limit,
+      totalData,
+      totalPages,
       data: movies,
-    });
+    };
+
+    //  Simpan ke Redis cache (5 menit)
+    await redis.set(cacheKey, JSON.stringify(response), "EX", 300);
+
+    return res.status(200).json(response);
   } catch (error) {
     console.error("Error getting all movies:", error);
     return res.status(500).json({ error: "Failed to get movies" });
