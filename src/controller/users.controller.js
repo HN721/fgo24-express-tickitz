@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { User, Profile } = require("../models");
 const bcrypt = require("bcrypt");
+const { sendEmailRegister } = require("../utils/sendEmail");
 exports.regsiter = async (req, res) => {
   try {
     const { email, password, username } = req.body;
@@ -26,7 +27,10 @@ exports.regsiter = async (req, res) => {
       phone_number: "",
       profile_image: "",
     });
-    return res.status(201).json(user);
+    await sendEmailRegister();
+    return res
+      .status(201)
+      .json({ success: true, message: "Success Register Data", result: user });
   } catch (error) {
     console.error("Error in register:", error.message);
     res.status(500).json({ message: error.message });
